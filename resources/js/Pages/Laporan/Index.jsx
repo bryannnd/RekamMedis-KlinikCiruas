@@ -1,8 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
-import { FileDown, Printer, Activity, AlertCircle, TrendingUp, Calendar } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react'; // Link needed for pagination
+import { FileDown, Printer, Activity, AlertCircle, TrendingUp, Calendar, History, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Index({ kunjunganStats, lowStockObats, topDiagnoses }) {
+export default function Index({ kunjunganStats, lowStockObats, topDiagnoses, kunjunganHistory }) {
     
     const handlePrint = () => {
         window.print();
@@ -160,6 +160,74 @@ export default function Index({ kunjunganStats, lowStockObats, topDiagnoses }) {
                                 <h4 className="text-green-800 font-bold">Stok Aman</h4>
                                 <p className="text-green-600 text-sm mt-1">Tidak ada obat dengan stok kurang dari 10.</p>
                             </div>
+                        )}
+                    </div>
+
+                    {/* Riwayat Kunjungan Table (Full Width) */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <div className="flex items-center gap-2 mb-6">
+                            <History className="w-5 h-5 text-gray-700" />
+                            <h3 className="text-lg font-bold text-gray-800">Riwayat Kunjungan (30 Hari Terakhir)</h3>
+                        </div>
+
+                        {kunjunganHistory.data.length > 0 ? (
+                            <>
+                                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Rawat</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Registrasi</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Rekam Medis</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Pasien</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Kelamin</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poliklinik Tujuan</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dokter PJ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {kunjunganHistory.data.map((item) => (
+                                                <tr key={item.no_rawat} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.no_rawat}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.tgl_registrasi}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.jam_registrasi}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.no_pasien}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.pasien?.nm_pasien || '-'}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.pasien?.jk === 'L' ? 'Laki-laki' : 'Perempuan'}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate max-w-xs">{item.pasien?.alamat || '-'}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.poliklinik?.nm_poli || '-'}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.dokter?.nm_dokter || '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {/* Pagination */}
+                                <div className="mt-4 flex justify-between items-center">
+                                    <div className="text-sm text-gray-500">
+                                        Menampilkan {kunjunganHistory.from} sampai {kunjunganHistory.to} dari {kunjunganHistory.total} data
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {kunjunganHistory.links.map((link, idx) => (
+                                            <Link
+                                                key={idx}
+                                                href={link.url || '#'}
+                                                className={`px-3 py-1 rounded-md text-sm border ${
+                                                    link.active 
+                                                        ? 'bg-blue-600 text-white border-blue-600' 
+                                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                                } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-8 text-gray-500 italic">Belum ada data kunjungan dalam 30 hari terakhir.</div>
                         )}
                     </div>
 

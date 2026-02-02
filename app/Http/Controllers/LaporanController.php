@@ -41,10 +41,22 @@ class LaporanController extends Controller
             ->limit(5)
             ->get();
 
+        // 4. Kunjungan History (Last 30 Days - Pagination)
+        // Matching the export logic context
+        $historyEndDate = Carbon::today()->endOfDay();
+        $historyStartDate = Carbon::today()->subDays(30)->startOfDay();
+
+        $kunjunganHistory = Kunjungan::with(['pasien', 'dokter', 'poliklinik'])
+            ->whereBetween('tgl_registrasi', [$historyStartDate, $historyEndDate])
+            ->orderBy('tgl_registrasi', 'desc')
+            ->orderBy('jam_registrasi', 'desc')
+            ->paginate(10);
+
         return Inertia::render('Laporan/Index', [
             'kunjunganStats' => $kunjunganStats,
             'lowStockObats' => $lowStockObats,
             'topDiagnoses' => $topDiagnoses,
+            'kunjunganHistory' => $kunjunganHistory,
         ]);
     }
 
