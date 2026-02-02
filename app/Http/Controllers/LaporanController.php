@@ -50,17 +50,15 @@ class LaporanController extends Controller
 
     public function export()
     {
-        $fileName = 'laporan_kunjungan_' . Carbon::today()->format('Y_m_d') . '.csv';
-        $endDate = Carbon::today();
-        $startDate = Carbon::today()->subDays(6);
+        $fileName = 'laporan_kunjungan_detail_' . Carbon::today()->format('Y_m_d') . '.csv';
+        // Export data for the last 30 days by default for a more complete report
+        $endDate = Carbon::today()->endOfDay();
+        $startDate = Carbon::today()->subDays(30)->startOfDay();
 
-        $data = Kunjungan::select(
-                DB::raw('DATE(tgl_registrasi) as date'),
-                DB::raw('count(*) as count')
-            )
+        $data = Kunjungan::with(['pasien', 'dokter', 'poliklinik'])
             ->whereBetween('tgl_registrasi', [$startDate, $endDate])
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
+            ->orderBy('tgl_registrasi', 'desc')
+            ->orderBy('jam_registrasi', 'desc')
             ->get();
 
         $headers = [
@@ -73,10 +71,35 @@ class LaporanController extends Controller
 
         $callback = function() use($data) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Tanggal', 'Jumlah Kunjungan']);
+            
+            // Add BOM for Excel UTF-8 compatibility
+            fputs($file, "\xEF\xBB\xBF");
+
+            // CSV Header
+            fputcsv($file, [
+                'No. Rawat', 
+                'Tanggal Registrasi', 
+                'Jam', 
+                'No. Rekam Medis', 
+                'Nama Pasien', 
+                'Jenis Kelamin', 
+                'Alamat', 
+                'Poliklinik Tujuan', 
+                'Dokter PJ'
+            ], ';');
 
             foreach ($data as $row) {
-                fputcsv($file, [$row->date, $row->count]);
+                fputcsv($file, [
+                    $row->no_rawat,
+                    $row->tgl_registrasi,
+                    $row->jam_registrasi,
+                    $row->no_pasien, // Assuming FK exists
+                    $row->pasien ? $row->pasien->nm_pasien : '-',
+                    $row->pasien ? ($row->pasien->jk === 'L' ? 'Laki-laki' : 'Perempuan') : '-',
+                    $row->pasien ? $row->pasien->alamat : '-',
+                    $row->poliklinik ? $row->poliklinik->nm_poli : '-',
+                    $row->dokter ? $row->dokter->nm_dokter : '-'
+                ], ';');
             }
 
             fclose($file);

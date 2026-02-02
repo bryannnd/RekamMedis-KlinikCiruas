@@ -37,12 +37,12 @@ Route::middleware(['auth', 'role:admin,dokter,petugas,manajer'])->group(function
     Route::resource('tindakans', TindakanController::class);
     Route::resource('pasiens', PasienController::class);
     Route::resource('kunjungans', KunjunganController::class);
+    Route::resource('rekam_medis', RekamMedisController::class)->except(['show']);
+
     // Explicit route for rekam_medis.show to handle slashes in ID (e.g. 2026/02/02/0001)
     Route::get('rekam_medis/{rekam_medis}', [RekamMedisController::class, 'show'])
         ->where('rekam_medis', '.*')
         ->name('rekam_medis.show');
-        
-    Route::resource('rekam_medis', RekamMedisController::class)->except(['show']);
     Route::resource('laboratoriums', LaboratoriumController::class);
     
     Route::get('antrian', [AntrianController::class, 'index'])->name('antrian.index');
